@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, useSpring, useTransform } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
 /*  Design tokens                                                      */
@@ -58,16 +59,56 @@ export function FormulaCard({ title, icon: Icon, accentText, children }) {
   );
 }
 
-export function FormulaLine({ children, result, unit }) {
+export function FormulaLine({ children, result, unit, hideAnswer = false }) {
   return (
     <div className="rounded-2xl bg-slate-50 px-5 py-4 text-xl font-bold tracking-wide text-slate-800 md:text-2xl">
       <div>{children}</div>
       {result !== undefined && (
-        <div className="mt-1 text-2xl text-slate-900 md:text-3xl">
+        <div
+          className="mt-1 text-2xl text-slate-900 md:text-3xl"
+          style={{
+            filter: hideAnswer ? 'blur(7px)' : 'none',
+            transition: 'filter 0.25s ease',
+            userSelect: hideAnswer ? 'none' : 'auto',
+          }}
+          aria-hidden={hideAnswer || undefined}
+        >
           = <AnimatedNumber value={result} /> <span className="text-lg font-semibold text-slate-400 md:text-xl">{unit}</span>
         </div>
       )}
     </div>
+  );
+}
+
+export function MaskedInline({ hideAnswer, children }) {
+  return (
+    <span
+      style={{
+        filter: hideAnswer ? 'blur(5px)' : 'none',
+        transition: 'filter 0.25s ease',
+        userSelect: hideAnswer ? 'none' : 'auto',
+      }}
+      aria-hidden={hideAnswer || undefined}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function AnswerToggle({ hidden, onChange, accent }) {
+  return (
+    <button
+      onClick={() => onChange(!hidden)}
+      className="flex items-center gap-1.5 self-end rounded-full px-3 py-1.5 text-sm font-bold shadow-sm ring-1 transition active:scale-95"
+      style={{
+        backgroundColor: hidden ? accent : '#ffffff',
+        color: hidden ? '#ffffff' : '#475569',
+        borderColor: accent,
+      }}
+    >
+      {hidden ? <EyeOff className="h-4 w-4" strokeWidth={2.5} /> : <Eye className="h-4 w-4" strokeWidth={2.5} />}
+      {hidden ? 'แสดงเฉลย' : 'ซ่อนเฉลย'}
+    </button>
   );
 }
 

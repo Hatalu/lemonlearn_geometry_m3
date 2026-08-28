@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { Edges, Line } from '@react-three/drei';
 import { ScanEye } from 'lucide-react';
 import { Scene3D } from './Scene3D.jsx';
-import { Var, LegendChip, FormulaCard, FormulaLine, VisualizerCard, BigToggle, SliderRow, SHAPES } from './shared.jsx';
+import { Var, LegendChip, FormulaCard, FormulaLine, VisualizerCard, BigToggle, SliderRow, SHAPES, AnswerToggle, MaskedInline } from './shared.jsx';
 
 const shape = SHAPES.pyramid;
 
@@ -102,6 +102,7 @@ export default function PyramidPanel() {
   const [s, setS] = useState(6);
   const [h, setH] = useState(8);
   const [xray, setXray] = useState(false);
+  const [hideAnswer, setHideAnswer] = useState(false);
 
   const { apothem, circumradius, perimeter, area: B } = regularPolygonMetrics(n, s);
   const l = Math.sqrt(h * h + apothem * apothem);
@@ -155,28 +156,34 @@ export default function PyramidPanel() {
       </VisualizerCard>
 
       <div className="flex flex-col gap-5">
-        <div className="flex flex-wrap gap-2">
-          <LegendChip c="l" symbol="l" label="สูงเอียง" />
-          <LegendChip c="h" symbol="h" label="สูงตรง" />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-2">
+            <LegendChip c="l" symbol="l" label="สูงเอียง" />
+            <LegendChip c="h" symbol="h" label="สูงตรง" />
+          </div>
+          <AnswerToggle hidden={hideAnswer} onChange={setHideAnswer} accent={shape.accent} />
         </div>
 
         <FormulaCard title="พื้นที่ผิว" accentText="text-amber-500">
           <div className="flex flex-col gap-3">
-            <FormulaLine result={lateral} unit="ตร.ซม.">
+            <FormulaLine result={lateral} unit="ตร.ซม." hideAnswer={hideAnswer}>
               พื้นที่ผิวข้าง = ½ × p × <Var c="l">l</Var>
             </FormulaLine>
-            <FormulaLine result={total} unit="ตร.ซม.">
+            <FormulaLine result={total} unit="ตร.ซม." hideAnswer={hideAnswer}>
               พื้นที่ผิวทั้งหมด = พื้นที่ผิวข้าง + B
             </FormulaLine>
           </div>
         </FormulaCard>
 
         <FormulaCard title="ปริมาตร" accentText="text-amber-500">
-          <FormulaLine result={volume} unit="ลบ.ซม.">
+          <FormulaLine result={volume} unit="ลบ.ซม." hideAnswer={hideAnswer}>
             ปริมาตร = ⅓ × B × <Var c="h">h</Var>
           </FormulaLine>
           <p className="mt-3 text-lg text-slate-500">
-            💡 <Var c="l">l</Var> = √(h² + apothem²) = <b>{l.toFixed(1)}</b> ซม. • p = {perimeter.toFixed(1)} ซม. • B = {B.toFixed(1)} ตร.ซม.
+            💡 <Var c="l">l</Var> = √(h² + apothem²) ={' '}
+            <MaskedInline hideAnswer={hideAnswer}>
+              <b>{l.toFixed(1)}</b> ซม. • p = {perimeter.toFixed(1)} ซม. • B = {B.toFixed(1)} ตร.ซม.
+            </MaskedInline>
           </p>
           <p className="mt-2 text-lg text-slate-500">
             ⬛ กดปุ่ม X-Ray แล้วสังเกตมุมฉากเล็กๆ ที่ฐาน — <Var c="h">h</Var> ตั้งฉากกับฐานเสมอ ไม่ว่าฐานจะเป็นรูปกี่เหลี่ยม

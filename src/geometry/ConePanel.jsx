@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { Edges, Line } from '@react-three/drei';
 import { ScanEye, UnfoldHorizontal } from 'lucide-react';
 import { Scene3D } from './Scene3D.jsx';
-import { Var, LegendChip, FormulaCard, FormulaLine, VisualizerCard, SliderRow, SHAPES } from './shared.jsx';
+import { Var, LegendChip, FormulaCard, FormulaLine, VisualizerCard, SliderRow, SHAPES, AnswerToggle, MaskedInline } from './shared.jsx';
 
 const shape = SHAPES.cone;
 
@@ -140,6 +140,7 @@ export default function ConePanel() {
   const [h, setH] = useState(8);
   const [t, setT] = useState(0);
   const [mode, setMode] = useState('unfold');
+  const [hideAnswer, setHideAnswer] = useState(false);
   const u = t / 100;
 
   const l = Math.sqrt(r * r + h * h);
@@ -238,29 +239,32 @@ export default function ConePanel() {
       </VisualizerCard>
 
       <div className="flex flex-col gap-5">
-        <div className="flex flex-wrap gap-2">
-          <LegendChip c="r" symbol="r" label="รัศมี" />
-          <LegendChip c="h" symbol="h" label="สูงตรง" />
-          <LegendChip c="l" symbol="l" label="สูงเอียง" />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-2">
+            <LegendChip c="r" symbol="r" label="รัศมี" />
+            <LegendChip c="h" symbol="h" label="สูงตรง" />
+            <LegendChip c="l" symbol="l" label="สูงเอียง" />
+          </div>
+          <AnswerToggle hidden={hideAnswer} onChange={setHideAnswer} accent={shape.accent} />
         </div>
 
         <FormulaCard title="พื้นที่ผิว" accentText="text-emerald-500">
           <div className="flex flex-col gap-3">
-            <FormulaLine result={lateral} unit="ตร.ซม.">
+            <FormulaLine result={lateral} unit="ตร.ซม." hideAnswer={hideAnswer}>
               พื้นที่ผิวข้าง = π<Var c="r">r</Var><Var c="l">l</Var>
             </FormulaLine>
-            <FormulaLine result={total} unit="ตร.ซม.">
+            <FormulaLine result={total} unit="ตร.ซม." hideAnswer={hideAnswer}>
               พื้นที่ผิวทั้งหมด = π<Var c="r">r</Var>(<Var c="l">l</Var> + <Var c="r">r</Var>)
             </FormulaLine>
           </div>
         </FormulaCard>
 
         <FormulaCard title="ปริมาตร" accentText="text-emerald-500">
-          <FormulaLine result={volume} unit="ลบ.ซม.">
+          <FormulaLine result={volume} unit="ลบ.ซม." hideAnswer={hideAnswer}>
             ปริมาตร = ⅓π<Var c="r">r</Var>²<Var c="h">h</Var>
           </FormulaLine>
           <p className="mt-3 text-lg text-slate-500">
-            💡 <Var c="l">l</Var> = √(r² + h²) = <b>{l.toFixed(1)}</b> ซม.
+            💡 <Var c="l">l</Var> = √(r² + h²) = <MaskedInline hideAnswer={hideAnswer}><b>{l.toFixed(1)}</b> ซม.</MaskedInline>
           </p>
           <p className="mt-2 text-lg text-slate-500">
             ⬛ กดโหมด <b>"X-Ray"</b> เพื่อมองทะลุผิวกรวยดูว่า <Var c="h">h</Var> ตั้งฉากกับฐานจริง

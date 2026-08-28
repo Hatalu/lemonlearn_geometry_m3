@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
 import { ScanEye, Sparkles } from 'lucide-react';
 import { Scene3D } from './Scene3D.jsx';
-import { Var, LegendChip, FormulaCard, FormulaLine, VisualizerCard, BigToggle, SliderRow, SHAPES } from './shared.jsx';
+import { Var, LegendChip, FormulaCard, FormulaLine, VisualizerCard, BigToggle, SliderRow, SHAPES, AnswerToggle } from './shared.jsx';
 
 const shape = SHAPES.sphere;
 
@@ -125,6 +125,7 @@ export default function SpherePanel() {
   const [r, setR] = useState(5);
   const [mode, setMode] = useState('peel');
   const [peeled, setPeeled] = useState(false);
+  const [hideAnswer, setHideAnswer] = useState(false);
 
   const surface = 4 * Math.PI * r * r;
   const volume = (4 / 3) * Math.PI * r * r * r;
@@ -194,12 +195,15 @@ export default function SpherePanel() {
       </VisualizerCard>
 
       <div className="flex flex-col gap-5">
-        <div className="flex flex-wrap gap-2">
-          <LegendChip c="r" symbol="r" label="รัศมี" />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-2">
+            <LegendChip c="r" symbol="r" label="รัศมี" />
+          </div>
+          <AnswerToggle hidden={hideAnswer} onChange={setHideAnswer} accent={shape.accent} />
         </div>
 
         <FormulaCard title="พื้นที่ผิว" accentText="text-sky-500">
-          <FormulaLine result={surface} unit="ตร.ซม.">
+          <FormulaLine result={surface} unit="ตร.ซม." hideAnswer={hideAnswer}>
             พื้นที่ผิว = 4π<Var c="r">r</Var>²
           </FormulaLine>
           <p className="mt-3 text-lg text-slate-500">
@@ -208,7 +212,7 @@ export default function SpherePanel() {
         </FormulaCard>
 
         <FormulaCard title="ปริมาตร" accentText="text-sky-500">
-          <FormulaLine result={volume} unit="ลบ.ซม.">
+          <FormulaLine result={volume} unit="ลบ.ซม." hideAnswer={hideAnswer}>
             ปริมาตร = 4/3 π<Var c="r">r</Var>³
           </FormulaLine>
           <p className="mt-3 text-lg text-slate-500">
