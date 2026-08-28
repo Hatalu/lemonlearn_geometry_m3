@@ -58,7 +58,10 @@ export default function Geometry3DLesson() {
 
         <TabBar active={active} onChange={setActive} />
 
-        <AnimatePresence mode="wait">
+        {/* mode="sync" (default) — a "wait" mode would hold the incoming tab off-screen
+            until the outgoing one's exit animation completes, which never resolves if the
+            tab was backgrounded mid-transition (rAF pauses), leaving the UI stuck. */}
+        <AnimatePresence>
           {active === 'pyramid' && (
             <SectionShell key="pyramid">
               <PyramidPanel />
