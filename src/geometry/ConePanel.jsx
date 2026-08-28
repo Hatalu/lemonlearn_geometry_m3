@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Edges, Line } from '@react-three/drei';
-import { Droplets, RotateCcw, ScanEye, UnfoldHorizontal } from 'lucide-react';
+import { ScanEye, UnfoldHorizontal } from 'lucide-react';
 import { Scene3D } from './Scene3D.jsx';
 import { Var, LegendChip, FormulaCard, FormulaLine, VisualizerCard, SliderRow, SHAPES } from './shared.jsx';
 
@@ -12,6 +12,10 @@ function ConeSolid({ r, h, opacityTarget, lineOpacity, offsetX = 0, xray = false
   const meshRef = useRef();
   const matRef = useRef();
   const lo = lineOpacity ?? opacityTarget;
+  // In X-Ray, the solid's own color is neutralized so the green h line (same hue family
+  // as the shape's usual emerald) doesn't blend into the surface it's meant to stand out from.
+  const meshColor = xray ? '#94a3b8' : '#34d399';
+  const edgeColor = xray ? '#475569' : '#047857';
 
   useFrame((_, delta) => {
     if (!meshRef.current) return;
@@ -35,12 +39,21 @@ function ConeSolid({ r, h, opacityTarget, lineOpacity, offsetX = 0, xray = false
     <group position={[offsetX, 0, 0]}>
       <mesh ref={meshRef} castShadow>
         <coneGeometry args={[1, 1, 48]} />
-        <meshStandardMaterial ref={matRef} color="#34d399" transparent opacity={1} side={THREE.DoubleSide} />
-        <Edges color="#047857" />
+        <meshStandardMaterial ref={matRef} color={meshColor} transparent opacity={1} side={THREE.DoubleSide} />
+        <Edges color={edgeColor} />
       </mesh>
       <Line points={[[0, h / 2, 0], [r, -h / 2, 0]]} color="#f97316" lineWidth={3} transparent opacity={lo} />
       <Line points={[[0, -h / 2, 0], [r, -h / 2, 0]]} color="#3b82f6" lineWidth={3} transparent opacity={lo} />
-      <Line points={[[0, h / 2, 0], [0, -h / 2, 0]]} color="#22c55e" lineWidth={2.5} dashed dashSize={0.1} gapSize={0.07} transparent opacity={lo * 0.9} />
+      <Line
+        points={[[0, h / 2, 0], [0, -h / 2, 0]]}
+        color="#16a34a"
+        lineWidth={xray ? 4 : 2.5}
+        dashed
+        dashSize={xray ? 0.22 : 0.1}
+        gapSize={xray ? 0.12 : 0.07}
+        transparent
+        opacity={xray ? lo : lo * 0.9}
+      />
       {xray && <Line points={rightAngleMark} color="#334155" lineWidth={2} transparent opacity={lo} />}
     </group>
   );
@@ -61,15 +74,6 @@ function circlePointsXY(r, segments = 48) {
   for (let i = 0; i <= segments; i++) {
     const a = (Math.PI * 2 * i) / segments;
     pts.push([r * Math.cos(a), r * Math.sin(a), 0]);
-  }
-  return pts;
-}
-
-function circlePointsXZ(r, y, segments = 48) {
-  const pts = [];
-  for (let i = 0; i <= segments; i++) {
-    const a = (Math.PI * 2 * i) / segments;
-    pts.push([r * Math.cos(a), y, r * Math.sin(a)]);
   }
   return pts;
 }
@@ -126,50 +130,8 @@ function ConeNet({ r, h, l, u }) {
   );
 }
 
-function PourCylinder({ r, h, pourCount, offsetX = 0 }) {
-  const fillRef = useRef();
-  const fracRef = useRef(0);
-  const target = pourCount / 3;
-
-  const fillGeo = useMemo(() => {
-    const g = new THREE.CylinderGeometry(1, 1, 1, 48);
-    g.translate(0, 0.5, 0);
-    return g;
-  }, []);
-
-  const bottomRim = useMemo(() => circlePointsXZ(r, -h / 2), [r, h]);
-  const topRim = useMemo(() => circlePointsXZ(r, h / 2), [r, h]);
-
-  useFrame((_, delta) => {
-    fracRef.current = THREE.MathUtils.damp(fracRef.current, target, 3.2, delta);
-    if (fillRef.current) {
-      fillRef.current.scale.set(r * 0.94, Math.max(fracRef.current * h, 0.0005), r * 0.94);
-    }
-  });
-
-  return (
-    <group position={[offsetX, 0, 0]}>
-      <mesh>
-        <cylinderGeometry args={[r, r, h, 48, 1, true]} />
-        <meshStandardMaterial color="#cbd5e1" transparent opacity={0.2} side={THREE.DoubleSide} depthWrite={false} />
-      </mesh>
-      <Line points={bottomRim} color="#64748b" lineWidth={2} />
-      <Line points={topRim} color="#94a3b8" lineWidth={1.5} transparent opacity={0.7} />
-      <Line points={[[r, -h / 2, 0], [r, h / 2, 0]]} color="#94a3b8" lineWidth={1.5} transparent opacity={0.6} />
-      <Line points={[[-r, -h / 2, 0], [-r, h / 2, 0]]} color="#94a3b8" lineWidth={1.5} transparent opacity={0.6} />
-
-      <group position={[0, -h / 2, 0]}>
-        <mesh ref={fillRef} geometry={fillGeo}>
-          <meshStandardMaterial color="#38bdf8" transparent opacity={0.82} />
-        </mesh>
-      </group>
-    </group>
-  );
-}
-
 const MODE_TABS = [
   { key: 'unfold', label: 'คลี่ผิว', icon: UnfoldHorizontal },
-  { key: 'pour', label: 'เท 3 ครั้ง', icon: Droplets },
   { key: 'xray', label: 'X-Ray', icon: ScanEye },
 ];
 
@@ -178,7 +140,6 @@ export default function ConePanel() {
   const [h, setH] = useState(8);
   const [t, setT] = useState(0);
   const [mode, setMode] = useState('unfold');
-  const [pourCount, setPourCount] = useState(0);
   const u = t / 100;
 
   const l = Math.sqrt(r * r + h * h);
@@ -186,13 +147,10 @@ export default function ConePanel() {
   const total = Math.PI * r * (l + r);
   const volume = (1 / 3) * Math.PI * r * r * h;
 
-  const gap = r + 1.3;
   const fitSize =
     mode === 'unfold'
       ? Math.max(r * 2, h) + (Math.max(h, 2 * (l + r) + 1) - Math.max(r * 2, h)) * u
-      : mode === 'pour'
-        ? Math.max(h, 2 * (gap + r))
-        : Math.max(r * 2, h);
+      : Math.max(r * 2, h);
 
   const netLabels =
     mode === 'unfold' ? (
@@ -210,10 +168,6 @@ export default function ConePanel() {
           🔵 ฐานวงกลม
         </span>
       </>
-    ) : mode === 'pour' ? (
-      <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
-        {pourCount >= 3 ? '🎉 เต็มพอดี! เทกรวย × 3 = ทรงกระบอก 1 ใบ' : `เทแล้ว ${pourCount}/3 ครั้ง`}
-      </span>
     ) : (
       <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
         ⬛ สังเกตมุมฉากที่ฐาน — h ตั้งฉากกับฐานเสมอ
@@ -228,12 +182,6 @@ export default function ConePanel() {
             <>
               <ConeSolid r={r} h={h} opacityTarget={1 - u} />
               <ConeNet r={r} h={h} l={l} u={u} />
-            </>
-          )}
-          {mode === 'pour' && (
-            <>
-              <ConeSolid r={r} h={h} opacityTarget={1} offsetX={-gap} />
-              <PourCylinder r={r} h={h} pourCount={pourCount} offsetX={gap} />
             </>
           )}
           {mode === 'xray' && <ConeSolid r={r} h={h} opacityTarget={0.16} lineOpacity={1} xray />}
@@ -277,28 +225,9 @@ export default function ConePanel() {
             />
           </div>
         )}
-        {mode === 'pour' && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPourCount((c) => Math.min(c + 1, 3))}
-              disabled={pourCount >= 3}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-3 text-base font-bold text-white shadow-sm transition active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-400"
-            >
-              <Droplets className="h-5 w-5" strokeWidth={2.5} />
-              {pourCount >= 3 ? 'เต็มแล้ว!' : `เท (${pourCount}/3)`}
-            </button>
-            <button
-              onClick={() => setPourCount(0)}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-base font-bold text-slate-500 shadow-sm ring-1 ring-slate-200 transition active:scale-[0.98]"
-            >
-              <RotateCcw className="h-5 w-5" strokeWidth={2.5} />
-              รีเซ็ต
-            </button>
-          </div>
-        )}
         {mode === 'xray' && (
           <p className="rounded-2xl bg-white/70 px-4 py-3 text-center text-base font-semibold text-slate-500 ring-1 ring-white">
-            ผิวโปร่งแสง มองทะลุเห็น <span className="text-green-500">h</span> ด้านใน — ตั้งฉากกับฐานเสมอ
+            ผิวโปร่งแสง มองทะลุเห็น <span className="text-green-600">h</span> ด้านใน — ตั้งฉากกับฐานเสมอ
           </p>
         )}
 
@@ -332,9 +261,6 @@ export default function ConePanel() {
           </FormulaLine>
           <p className="mt-3 text-lg text-slate-500">
             💡 <Var c="l">l</Var> = √(r² + h²) = <b>{l.toFixed(1)}</b> ซม.
-          </p>
-          <p className="mt-2 text-lg text-slate-500">
-            🪣 กดโหมด <b>"เท 3 ครั้ง"</b> ในรูป 3 มิติ — เทกรวยใส่ทรงกระบอก (r, h เท่ากัน) 3 ครั้งจะเต็มพอดี เพราะปริมาตรกรวย = ⅓ ปริมาตรทรงกระบอกเสมอ
           </p>
           <p className="mt-2 text-lg text-slate-500">
             ⬛ กดโหมด <b>"X-Ray"</b> เพื่อมองทะลุผิวกรวยดูว่า <Var c="h">h</Var> ตั้งฉากกับฐานจริง

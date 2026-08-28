@@ -8,6 +8,22 @@ import { Var, LegendChip, FormulaCard, FormulaLine, VisualizerCard, BigToggle, S
 
 const shape = SHAPES.sphere;
 
+// Evenly spread points on a unit sphere (golden-angle spiral) — used to fan out
+// several radius lines so it visually reads as "every point, same distance from center".
+function fibonacciSpherePoints(n) {
+  const pts = [];
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < n; i++) {
+    const y = 1 - (i / (n - 1)) * 2;
+    const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = goldenAngle * i;
+    pts.push([Math.cos(theta) * radiusAtY, y, Math.sin(theta) * radiusAtY]);
+  }
+  return pts;
+}
+
+const RADIUS_LINE_DIRS = fibonacciSpherePoints(9);
+
 function SphereSolid({ r, opacityTarget, lineOpacity, showGrid = false }) {
   const meshRef = useRef();
   const matRef = useRef();
@@ -37,6 +53,20 @@ function SphereSolid({ r, opacityTarget, lineOpacity, showGrid = false }) {
       )}
 
       <Line points={[[0, 0, 0], [r, 0, 0]]} color="#1d4ed8" lineWidth={3} transparent opacity={lo} />
+      {showGrid &&
+        RADIUS_LINE_DIRS.map((d, i) => (
+          <Line
+            key={i}
+            points={[
+              [0, 0, 0],
+              [d[0] * r, d[1] * r, d[2] * r],
+            ]}
+            color="#3b82f6"
+            lineWidth={1.5}
+            transparent
+            opacity={lo * 0.5}
+          />
+        ))}
       {showGrid && (
         <mesh>
           <sphereGeometry args={[Math.max(r * 0.035, 0.05), 16, 16]} />
