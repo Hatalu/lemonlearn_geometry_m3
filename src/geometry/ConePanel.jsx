@@ -39,7 +39,7 @@ function ConeSolid({ r, h, opacityTarget, lineOpacity, offsetX = 0, xray = false
     <group position={[offsetX, 0, 0]}>
       <mesh ref={meshRef} castShadow>
         <coneGeometry args={[1, 1, 48]} />
-        <meshStandardMaterial ref={matRef} color={meshColor} transparent opacity={1} side={THREE.DoubleSide} />
+        <meshStandardMaterial ref={matRef} color={meshColor} transparent opacity={1} depthWrite={false} side={THREE.DoubleSide} />
         <Edges color={edgeColor} />
       </mesh>
       <Line points={[[0, h / 2, 0], [r, -h / 2, 0]]} color="#f97316" lineWidth={3} transparent opacity={lo} />

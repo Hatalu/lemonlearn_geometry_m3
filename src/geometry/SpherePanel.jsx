@@ -42,7 +42,7 @@ function SphereSolid({ r, opacityTarget, lineOpacity, showGrid = false }) {
     <group>
       <mesh ref={meshRef} castShadow>
         <sphereGeometry args={[1, 48, 32]} />
-        <meshStandardMaterial ref={matRef} color="#38bdf8" transparent opacity={1} roughness={0.35} metalness={0.05} />
+        <meshStandardMaterial ref={matRef} color="#38bdf8" transparent opacity={1} depthWrite={false} roughness={0.35} metalness={0.05} />
       </mesh>
 
       {showGrid && (
@@ -68,10 +68,17 @@ function SphereSolid({ r, opacityTarget, lineOpacity, showGrid = false }) {
           />
         ))}
       {showGrid && (
-        <mesh>
-          <sphereGeometry args={[Math.max(r * 0.035, 0.05), 16, 16]} />
-          <meshStandardMaterial color="#1d4ed8" transparent opacity={lo} />
-        </mesh>
+        <>
+          {/* soft halo so the center point pops against the crossing radius lines */}
+          <mesh>
+            <sphereGeometry args={[Math.max(r * 0.11, 0.15), 16, 16]} />
+            <meshBasicMaterial color="#93c5fd" transparent opacity={lo * 0.35} depthWrite={false} />
+          </mesh>
+          <mesh>
+            <sphereGeometry args={[Math.max(r * 0.06, 0.09), 16, 16]} />
+            <meshStandardMaterial color="#1d4ed8" emissive="#1d4ed8" emissiveIntensity={0.8} transparent opacity={lo} depthWrite={false} />
+          </mesh>
+        </>
       )}
     </group>
   );

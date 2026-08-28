@@ -82,7 +82,7 @@ function PyramidMesh({ n, s, h, xray }) {
   return (
     <group>
       <mesh ref={meshRef} geometry={geometry} castShadow>
-        <meshStandardMaterial ref={matRef} color="#f59e0b" flatShading transparent opacity={1} side={THREE.DoubleSide} />
+        <meshStandardMaterial ref={matRef} color="#f59e0b" flatShading transparent opacity={1} depthWrite={false} side={THREE.DoubleSide} />
         <Edges color="#92400e" />
       </mesh>
 
